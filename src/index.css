@@ -1,0 +1,431 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Twins Drinks Design System - Black & White Theme */
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 100%;
+
+    --hero-bg: 0 0% 0%;
+    --hero-overlay: 0 0% 0% / 0.9;
+    --elegant-gray: 0 0% 85%;
+    --soft-gray: 0 0% 75%;
+    
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 0%), hsl(0 0% 8%));
+    --gradient-section: linear-gradient(180deg, hsl(0 0% 0%), hsl(0 0% 5%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 3%), hsl(0 0% 8%));
+    --gradient-professional: linear-gradient(135deg, hsl(0 0% 0%), hsl(0 0% 12%));
+    
+    /* Gradientes Premium para Planos */
+    --gradient-bronze: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+    --gradient-prata: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+    --gradient-ouro: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    --gradient-diamante: linear-gradient(135deg, #B9F2FF 0%, #ADD8E6 25%, #E6E6FA 50%, #DDA0DD 75%, #FFB6C1 100%);
+    
+    --shadow-elegant: 0 25px 60px hsl(0 0% 0% / 0.12);
+    --shadow-card: 0 8px 25px hsl(0 0% 0% / 0.08);
+    --shadow-glow: 0 0 35px hsl(0 0% 100% / 0.12);
+    --shadow-professional: 0 15px 40px hsl(0 0% 0% / 0.15);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-elegant: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-professional: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    --radius: 0.875rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 8%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 100%;
+    
+    --hero-bg: 0 0% 0%;
+    --elegant-gray: 0 0% 85%;
+    --soft-gray: 0 0% 75%;
+    
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 0%), hsl(0 0% 5%));
+    --gradient-section: linear-gradient(180deg, hsl(0 0% 0%), hsl(0 0% 3%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 3%), hsl(0 0% 8%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    transition: var(--transition-smooth);
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background: #000000 !important;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  body {
+    @apply bg-black text-white font-light;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    line-height: 1.6;
+    background: #000000 !important;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-normal tracking-wide;
+    line-height: 1.3;
+  }
+
+  .hero-text {
+    @apply text-5xl md:text-7xl font-ultralight tracking-widest;
+    font-family: 'Playfair Display', serif;
+    text-shadow: 2px 2px 25px rgba(0, 0, 0, 0.4);
+    line-height: 1.1;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-5xl font-extralight tracking-wider mb-12;
+    font-family: 'Playfair Display', serif;
+    line-height: 1.2;
+  }
+
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-on-scroll.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px hsl(var(--primary) / 0.15);
+  }
+
+  .professional-card {
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-professional);
+    transition: var(--transition-professional);
+    border: 1px solid hsl(0 0% 20%);
+  }
+
+  .professional-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px hsl(0 0% 100% / 0.1);
+    border-color: hsl(0 0% 30%);
+  }
+
+  .stats-number {
+    @apply text-5xl md:text-7xl font-thin tracking-wider;
+    line-height: 1;
+  }
+
+  .overlay-dark {
+    background: var(--hero-overlay);
+  }
+
+  .text-professional {
+    @apply text-foreground;
+    color: hsl(0 0% 100%);
+  }
+
+  .text-professional-muted {
+    @apply text-muted-foreground;
+    color: hsl(0 0% 65%);
+  }
+
+  .btn-professional {
+    background: var(--gradient-professional);
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-professional);
+    border: 1px solid hsl(0 0% 20%);
+  }
+
+  .btn-professional:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .section-professional {
+    background: var(--gradient-section);
+  }
+  }
+  
+  /* Força tudo para ser preto */
+  section, div, main, article, aside, header, footer {
+    background-color: transparent !important;
+  }
+  
+  .bg-white, .bg-gray-50, .bg-gray-100 {
+    background-color: #000000 !important;
+  }
+  
+  /* Classes para os Planos Premium */
+  .plano-bronze {
+    background: var(--gradient-bronze);
+    box-shadow: 0 10px 30px rgba(205, 127, 50, 0.3);
+  }
+  
+  .plano-prata {
+    background: var(--gradient-prata);
+    box-shadow: 0 10px 30px rgba(192, 192, 192, 0.3);
+  }
+  
+  .plano-ouro {
+    background: var(--gradient-ouro);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+  }
+  
+  .plano-diamante {
+    background: var(--gradient-diamante);
+    box-shadow: 0 15px 40px rgba(185, 242, 255, 0.4);
+  }
+
+  /* Temas dinâmicos baseados no plano selecionado */
+  [data-theme="bronze"] {
+    --primary: 31 75% 48%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 31 75% 48%;
+    --accent-foreground: 0 0% 100%;
+    --ring: 31 75% 48%;
+    --border: 31 50% 25%;
+    --card: 31 30% 8%;
+    --card-foreground: 31 10% 90%;
+    --muted: 31 30% 15%;
+    --secondary: 31 50% 12%;
+    --hero-bg: 31 100% 5%;
+    --gradient-hero: linear-gradient(135deg, hsl(31 100% 5%), hsl(31 75% 15%));
+    --gradient-section: linear-gradient(180deg, hsl(31 100% 5%), hsl(31 50% 8%));
+    --shadow-glow: 0 0 35px hsl(31 75% 48% / 0.3);
+  }
+
+  [data-theme="prata"] {
+    --primary: 0 0% 75%;
+    --primary-foreground: 0 0% 10%;
+    --accent: 0 0% 75%;
+    --accent-foreground: 0 0% 10%;
+    --ring: 0 0% 75%;
+    --border: 0 0% 35%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 90%;
+    --muted: 0 0% 15%;
+    --secondary: 0 0% 12%;
+    --hero-bg: 0 0% 5%;
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 5%), hsl(0 0% 20%));
+    --gradient-section: linear-gradient(180deg, hsl(0 0% 5%), hsl(0 0% 10%));
+    --shadow-glow: 0 0 35px hsl(0 0% 75% / 0.3);
+  }
+
+  [data-theme="ouro"] {
+    --primary: 45 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --accent: 45 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --ring: 45 100% 50%;
+    --border: 45 80% 25%;
+    --card: 45 30% 8%;
+    --card-foreground: 45 10% 90%;
+    --muted: 45 30% 15%;
+    --secondary: 45 50% 12%;
+    --hero-bg: 45 100% 5%;
+    --gradient-hero: linear-gradient(135deg, hsl(45 100% 5%), hsl(45 80% 20%));
+    --gradient-section: linear-gradient(180deg, hsl(45 100% 5%), hsl(45 50% 10%));
+    --shadow-glow: 0 0 35px hsl(45 100% 50% / 0.4);
+  }
+
+  [data-theme="diamante"] {
+    --primary: 195 100% 80%;
+    --primary-foreground: 0 0% 0%;
+    --accent: 290 50% 85%;
+    --accent-foreground: 0 0% 0%;
+    --ring: 195 100% 80%;
+    --border: 195 50% 30%;
+    --card: 195 30% 8%;
+    --card-foreground: 195 10% 95%;
+    --muted: 195 30% 15%;
+    --secondary: 195 50% 12%;
+    --hero-bg: 195 100% 3%;
+    --gradient-hero: linear-gradient(135deg, 
+      hsl(195 100% 3%), 
+      hsl(270 60% 8%), 
+      hsl(300 40% 12%));
+    --gradient-section: linear-gradient(180deg, 
+      hsl(195 100% 3%), 
+      hsl(270 60% 6%), 
+      hsl(300 40% 8%));
+    --shadow-glow: 0 0 40px hsl(195 100% 80% / 0.4);
+  }
+
+  /* Efeitos especiais para mobile */
+  @media (max-width: 768px) {
+    html {
+      font-size: 14px;
+      overflow-x: hidden;
+      width: 100%;
+    }
+    
+    body {
+      font-size: 16px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      width: 100%;
+    }
+    
+    .hero-text {
+      @apply text-4xl md:text-6xl font-light tracking-wide;
+      line-height: 1.2;
+    }
+    
+    .section-title {
+      @apply text-2xl md:text-4xl font-light tracking-wide mb-8;
+      line-height: 1.3;
+    }
+    
+    /* Melhor legibilidade em mobile */
+    h1, h2, h3 {
+      line-height: 1.3;
+    }
+    
+    /* Otimização de scroll para mobile */
+    html {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Remove animations desnecessárias em mobile */
+    .animate-on-scroll {
+      opacity: 1;
+      transform: translateY(0);
+      transition: none;
+    }
+    
+    /* Otimizações para toque */
+    button, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Melhor spacing para mobile */
+    .container {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    
+    /* Otimizações específicas para mobile */
+    [data-theme="bronze"], [data-theme="prata"], [data-theme="ouro"], [data-theme="diamante"] {
+      --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Melhor performance em dispositivos móveis */
+    * {
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+    
+    /* Previne zoom em inputs no iOS */
+    input, select, textarea {
+      font-size: 16px;
+    }
+    
+    /* Melhor contraste em telas pequenas */
+    .text-muted-foreground {
+      opacity: 0.9;
+    }
+    
+    /* Botões mais acessíveis no mobile */
+    .btn-professional {
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+    }
+    
+    /* Cards mais compactos no mobile */
+    .professional-card {
+      padding: 1rem;
+    }
+    
+    /* Grid responsivo otimizado */
+    .grid {
+      gap: 0.75rem;
+    }
+    
+    /* Tipografia responsiva */
+    .stats-number {
+      @apply text-3xl md:text-5xl font-light tracking-wide;
+    }
+  }
