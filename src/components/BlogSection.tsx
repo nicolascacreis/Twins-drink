@@ -1,6 +1,7 @@
 import { BancadasSelector } from '@/components/BancadasSelector';
 import { Button } from '@/components/ui/button';
 import { Palette } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 export const BlogSection = () => {
   return (
@@ -29,13 +30,14 @@ export const BlogSection = () => {
           <p className="text-base sm:text-lg md:text-xl text-professional-muted font-light mb-6 sm:mb-10">
             Veja as datas disponíveis e solicite seu orçamento personalizado
           </p>
-          <Button 
-            size="lg" 
-            onClick={() => window.location.href = '/agenda'}
-            className="btn-professional text-white hover:bg-primary/90 font-normal tracking-wider px-8 sm:px-10 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-professional w-full sm:w-auto"
-          >
-            Ver Agenda Disponível
-          </Button>
+          <Link to="/agenda">
+            <Button 
+              size="lg"
+              className="btn-professional text-white hover:bg-primary/90 font-normal tracking-wider px-8 sm:px-10 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-professional w-full sm:w-auto"
+            >
+              Ver Agenda Disponível
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
