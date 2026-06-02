@@ -1,28 +1,40 @@
-# Portal Parceiro MVP — Pipeline de Integrações e Score ProdTech (Versão Atualizada)
+# Portal Parceiro MVP — Pipeline de Integrações e Score ProdTech
 
 ## Sumário
 
-- Visão Geral
-- Arquitetura do Pipeline
-- Fontes de Dados
-- Tabela Gerada
-- Regras de Classificação de Integração
-- Query do Score ProdTech
-- Glossário de Colunas
-- Notas de Operação
+Visão Geral
+
+Arquitetura do Pipeline
+
+Fontes de Dados
+
+Tabela Gerada
+
+Regras de Classificação de Integração
+
+Problema Resolvido: Duplicação por Alfândega
+
+Query do Score ProdTech
+
+Glossário de Colunas
 
 ---
 
 ## Visão Geral
 
-O **Portal Parceiro MVP** é um pipeline analítico que consolida dados de cotações e emissões para gerar um **score de maturidade tecnológica (ProdTech)** por seguradora.
+O Portal Parceiro MVP é um pipeline analítico que consolida dados de cotações, emissões, erros e integrações para gerar um score de maturidade tecnológica (ProdTech) por seguradora.
 
 A pontuação avalia quatro dimensões:
 
-- **Features (integrações disponíveis)**
-- **% Emissão Automática**
-- **% Sucesso Cotação**
-- **Quantidade de Clientes**
+Features (integrações disponíveis) — quantas das 8 integrações possíveis a seguradora já tem ativas
+
+% Emissão Automática — quão automatizado é o processo de emissão
+
+% Sucesso Cotação — taxa de cotações que viraram apólice
+
+Quantidade de Clientes — base de clientes que utilizam o canal
+
+O pipeline roda em Databricks (PySpark), lê dados do MySQL (3 bancos: ReportDB, db_relatorio, pre-alfandega-prod) e grava a tabela final de volta no MySQL para consumo pelo Metabase.
 
 ---
 
@@ -36,8 +48,9 @@ A pontuação avalia quatro dimensões:
 │ operational_*     │    │ tb_emissoes       │    │ tb_pre_alfandega_ │
 │ core_*            │    │ tb_performance_*  │    │   processado      │
 │                   │    │ tb_erros_cotacao  │    │ tb_pre_alfandega_ │
-└────────┬──────────┘    └────────┬──────────┘    │   lote            │
-         │                        │                └────────┬──────────┘
+│                   │    │                   │    │   lote            │
+└────────┬──────────┘    └────────┬──────────┘    └────────┬──────────┘
+         │                        │                        │
          └────────────────────────┴────────────────────────┘
                                   │
                                   ▼
@@ -48,13 +61,13 @@ A pontuação avalia quatro dimensões:
                                  │
                                  ▼
                     ┌────────────────────────────────────────────────┐
-                    │ db_relatorio                                   │
-                    │ tb_portal_parceiro_mvo_consolidado             │
+                    │  Banco db_relatorio                            │
+                    │  tb_portal_parceiro_mvo_consolidado            │
                     └────────────┬────────────────────────────────────┘
                                  ▼
                     ┌──────────────────────────┐
-                    │ Metabase                 │
-                    │ Query Score ProdTech     │
+                    │ Query do Score (Metabase)│
+                    │ Calcula o ProdTech       │
                     └──────────────────────────┘
 ```
 
@@ -64,155 +77,185 @@ A pontuação avalia quatro dimensões:
 
 ### ReportDB
 
-| Tabela | Uso |
-|------|-----|
-| operational_policy | Emissões |
-| operational_quote | Cotações |
-| core_enumerate | Tipos e recursos |
-| core_client | Clientes |
-| core_insurance_company | Seguradoras |
-| core_status_apolice | Status |
-| core_user | Usuários |
+Tabela | Uso
 
----
+operational_policy | Emissões / apólices
+
+operational_quote | Cotações
+
+core_enumerate | Tipos de solicitação e recurso
+
+core_client | Clientes
+
+core_insurance_company | Seguradoras
+
+core_status_apolice | Status de apólice
+
+core_user | Usuários
 
 ### db_relatorio
 
-| Tabela | Uso |
-|------|-----|
-| tb_emissoes | Financeiro |
-| tb_performance_cotacao | Performance |
-| tb_erros_cotacao | Erros |
+Tabela | Uso
 
----
+tb_emissoes | Emissões financeiras
+
+tb_performance_cotacao | Cotações com performance
+
+tb_erros_cotacao | Erros de cotação
 
 ### pre-alfandega-prod
 
-| Tabela | Uso |
-|------|-----|
-| tb_pre_alfandega_processado | Apólices |
-| tb_pre_alfandega_lote | Seguradora |
+Tabela | Uso
+
+tb_pre_alfandega_processado | Apólices importadas via Alfândega
+
+tb_pre_alfandega_lote | Lotes de Alfândega
 
 ---
 
 ## Tabela Gerada
 
-### tb_portal_parceiro_mvo_consolidado
+O pipeline grava uma tabela final no MySQL (db_relatorio).
 
-Grão: **1 linha por cotação**
+### tb_portal_parceiro_mvo_consolidado — Base Analítica Final
+
+Uma linha por cotação.
 
 Contém:
 
 - Dados de cotação
 - Dados de emissão
-- Coluna de integração já classificada
-- Flags de API/manual
+- Dados de erro
+- Classificação de integração (1 a 8, incluindo Alfândega)
+- Flags operacionais
 
-👉 Esta tabela substitui toda a modelagem anterior (mvp + integrações + alfândega separadas)
+Principais grupos de colunas:
+
+Cotação: id_cotacao, dt_criacao_cotacao, seguradora_cotacao, cotacao_manual
+
+Emissão: id_apolice, data_emissao, vl_premio, fl_emissao_automatica
+
+Métricas base: vl_premio, data_emissao
 
 ---
 
 ## Regras de Classificação de Integração
 
-Agora as integrações já vêm pré-classificadas na coluna:
+Existem 8 integrações possíveis.
 
-```
+As classificações são geradas no pipeline a partir dos dados operacionais e da Alfândega e já estão disponíveis na coluna:
+
 integracao
-```
 
-As 8 integrações continuam sendo:
+### Regras 1-7 (operational_*)
 
-1. Recursal  
-2. Fiscal  
-3. Cível  
-4. Trabalhista  
-5. Outras Modalidades  
-6. Cancelamento  
-7. Endosso  
-8. Alfândega
+1 Recursal — tipo_solicitacao ∈ {Apólice Nova, Renovação, Substituição} e Modality = 3
 
-### Origem das regras
+2 Fiscal — tipo_solicitacao ∈ {Apólice Nova, Renovação, Substituição} e Modality = 2
 
-- Integrações 1–7 derivadas do modelo operacional (operational_*)
-- Integração 8 derivada da Alfândega
+3 Cível — tipo_solicitacao ∈ {Apólice Nova, Renovação, Substituição} e Modality = 1
+
+4 Trabalhista — tipo_solicitacao ∈ {Apólice Nova, Renovação, Substituição} e Modality = 4
+
+5 Outras Modalidades — tipo_solicitacao ∈ {Apólice Nova, Renovação, Substituição} e Modality fora de {1,2,3,4}
+
+6 Cancelamento — id_enum_type_solicitation = 43 e enum_endorsement_type = 1
+
+7 Endosso — id_enum_type_solicitation = 43 e enum_endorsement_type ∈ {2,3,4}
+
+### Regra 8 — Alfândega
+
+Identificação baseada no cruzamento entre número da apólice e nome da seguradora com a base de pré-alfândega.
 
 ---
 
 ## Regra de Integração Ativa
 
-Uma integração é considerada ativa quando:
+Uma integração é considerada ativa quando possui:
 
-```
 >= 5 cotações via API
-```
 
-Critério técnico:
+Critério:
 
-```
 cotacao_manual = 0
-```
 
 ---
 
-## Query do Score ProdTech (Lógica)
+## Problema Resolvido: Duplicação por Alfândega
+
+A duplicação ocorria devido ao union entre integrações operacionais e Alfândega.
+
+Solução aplicada:
+
+- Integração unificada na coluna integracao
+- Processamento resolvido no pipeline
+- Eliminação de joins fan-out
+
+Resultado: cada cotação aparece uma única vez na base consolidada.
+
+---
+
+## Query do Score ProdTech
+
+A query roda no Metabase utilizando apenas a tabela consolidada.
 
 ### Métricas
 
-- Clientes: COUNT(DISTINCT id_cliente)
-- Emissão automática:
-  - apólices com fl_emissao_automatica = 1
-- Sucesso cotação:
-  - apólices emitidas / cotações
+Clientes: COUNT DISTINCT id_cliente
 
----
+% Emissão automática:
+
+apólices automáticas / apólices emitidas
+
+% Sucesso cotação:
+
+apólices emitidas / cotações
 
 ### Integrações
 
-- Agrupamento por seguradora + integracao
-- Filtra integrações com volume >= 5
-- Soma total
+- Agrupamento por seguradora e integração
+- Considera apenas API
+- Integrações com >= 5 registros
 
 ---
 
-### Scores
+### Score ProdTech
 
-Mesmas regras da query atual:
-
-- Features (integrações)
-- Emissão automática
-- Sucesso cotação
-- Clientes
-
----
-
-### Score final
-
-```
-(score_features + score_emissao + score_sucesso + score_clientes) / 4
-```
+(score_features + score_emissao_automatica + score_sucesso_cotacao + score_clientes) / 4
 
 ---
 
 ## Glossário de Colunas
 
-| Coluna | Descrição |
-|--------|---------|
-| id_cotacao | ID da cotação |
-| id_apolice | ID da apólice |
-| integracao | Classificação da integração |
-| cotacao_manual | Manual vs API |
-| fl_emissao_automatica | Flag de automação |
-| vl_premio | Valor do prêmio |
-| data_emissao | Data |
+Coluna | Significado
+
+id_cotacao | ID único da cotação
+
+id_apolice | ID da apólice
+
+dt_criacao_cotacao | Data criação
+
+seguradora_cotacao | Seguradora
+
+integracao | Tipo de integração
+
+vl_premio | Prêmio
+
+data_emissao | Data emissão
+
+fl_emissao_automatica | Flag de automação
+
+cotacao_manual | Manual vs API
 
 ---
 
 ## Notas de Operação
 
-- Execução diária (recomendado)
-- Overwrite da tabela
-- Integrações já resolvidas no pipeline
-- Sem risco de duplicação
+Periodicidade: execução diária
 
----
+Modo: overwrite da tabela
+
+Parâmetro DATA_INICIO aplicado no pipeline
+
+Capitalização de seguradora padronizada com UPPER + TRIM
 
