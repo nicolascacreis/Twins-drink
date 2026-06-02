@@ -178,6 +178,7 @@ Existem 8 integrações possíveis. As regras 1-7 vêm do cruzamento entre cota�
 | 5 | Outras Modalidades | `tipo_solicitacao ∈ {Apólice Nova, Renovação, Substituição}` e `Modality fora de {1,2,3,4}` |
 | 6 | Cancelamento | `id_enum_type_solicitation = 43` e `enum_endorsement_type = 1` |
 | 7 | Endosso | `id_enum_type_solicitation = 43` e `enum_endorsement_type ∈ {2, 3, 4}` |
+| 8 | Alfandega | `Cruzamento por número da apólice e nome da seguradora` |
 
 **Regra de ativa:** uma integração é considerada ativa para a seguradora quando `qtd_api >= 5` (a coluna `cont_integracao` da tabela vira `1`).
 
