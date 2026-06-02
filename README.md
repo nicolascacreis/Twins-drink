@@ -1,69 +1,104 @@
+# Portal Parceiro MVP — Pipeline de Score ProdTech (Versão Consolidada)
 
-# Portal Parceiro MVP — Documentação Atualizada (Base: tb_portal_parceiro_mvo_consolidado)
+## Sumário
 
-## Visão Geral
-
-Esta versão do cálculo de score ProdTech foi **simplificada** para utilizar exclusivamente a tabela consolidada:
-
-**tb_portal_parceiro_mvo_consolidado**
-
-Diferente da versão anterior, **não há mais separação entre tabelas de integrações e base analítica**, nem dependência da Alfândega como dimensão separada.
-
-Toda a lógica agora é derivada diretamente da base consolidada.
+- Visão Geral
+- Arquitetura do Pipeline (Atual)
+- Fonte de Dados
+- Tabela Final
+- Lógica de Construção do Score
+- Cálculo de Integrações
+- Regras de Score
+- Query do Score ProdTech
+- Glossário de Colunas
+- Diferenças da Versão Anterior
+- Notas de Operação
 
 ---
 
-## Estrutura da Base Utilizada
+## Visão Geral
 
-Tabela única:
+O **Portal Parceiro MVP** é um pipeline analítico que consolida dados operacionais de cotações e emissões para calcular um **score de maturidade tecnológica (ProdTech)** por seguradora.
 
-- `tb_portal_parceiro_mvo_consolidado`
+A pontuação avalia quatro dimensões:
 
-Principais colunas utilizadas:
+- **Features (integrações disponíveis)** — quantas integrações estão ativas
+- **% Emissão Automática** — nível de automação do processo
+- **% Sucesso Cotação** — conversão de cotação em apólice
+- **Quantidade de Clientes** — base ativa no canal
 
-- `seguradora_cotacao`
-- `id_cliente`
-- `id_apolice`
-- `id_cotacao`
-- `integracao`
-- `vl_premio`
-- `data_emissao`
-- `fl_emissao_automatica`
-- `cotacao_manual`
+Nesta versão, o modelo foi **simplificado**:
+
+👉 Todo o cálculo agora usa **uma única tabela consolidada**
+👉 Eliminadas dependências de tabelas auxiliares e Alfândega
+👉 Zero risco de duplicação por fan-out
+
+---
+
+## Arquitetura do Pipeline (Atual)
+
+```
+┌──────────────────────────────┐
+│   Databricks (PySpark)       │
+│   portal_parceiro_mvp_*      │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌────────────────────────────────────┐
+│ MySQL (db_relatorio)              │
+│ tb_portal_parceiro_mvo_consolidado│
+└──────────────┬─────────────────────┘
+               ▼
+┌──────────────────────────┐
+│ Metabase                 │
+│ Query Score ProdTech     │
+└──────────────────────────┘
+```
+
+---
+
+## Fonte de Dados
+
+Tabela única utilizada:
+
+### tb_portal_parceiro_mvo_consolidado
+
+Grão: **1 linha por cotação**
+
+Contém:
+
+- Dados de cotação
+- Dados de emissão
+- Flags de automação
+- Classificação de integração
+
+---
+
+## Tabela Final
+
+A tabela consolidada substitui completamente:
+
+❌ tb_portal_parceiro_mvp  
+❌ tb_portal_parceiro_integracoes  
+❌ Base de Afândega
 
 ---
 
 ## Lógica de Construção do Score
 
-O cálculo segue 4 etapas principais:
+O cálculo segue 4 blocos:
 
-1. Base filtrada
-2. Cálculo de métricas por seguradora
-3. Cálculo de integrações ativas
-4. Conversão em score
-
----
-
-## 1. Base de Dados
-
-A base considera:
-
-- Filtros opcionais de período e seguradora
-- Apenas registros válidos da tabela consolidada
-
----
-
-## 2. Métricas por Seguradora
-
-Agrupamento por:
+### 1. Normalização
 
 ```
 UPPER(TRIM(seguradora_cotacao))
 ```
 
-### Métricas calculadas
+---
 
-#### Quantidade de Clientes
+### 2. Métricas Principais
+
+#### Clientes
 
 ```
 COUNT(DISTINCT id_cliente)
@@ -74,42 +109,31 @@ COUNT(DISTINCT id_cliente)
 #### % Emissão Automática
 
 ```
-(qtd_apolices_automaticas) / (qtd_apolices_emitidas)
+apolices_automaticas / apolices_emitidas
 ```
 
-Onde:
+Regras:
 
-- Apólice automática:
-  - `vl_premio > 0`
-  - `data_emissao IS NOT NULL`
-  - `fl_emissao_automatica = 1`
+- Considera emissão válida:
+  - vl_premio > 0
+  - data_emissao <> NULL
 
-- Apólice emitida:
-  - `vl_premio > 0`
-  - `data_emissao IS NOT NULL`
+- Considera automática:
+  - fl_emissao_automatica = 1
 
 ---
 
 #### % Sucesso Cotação
 
 ```
-(qtd_apolices_emitidas) / (qtd_cotacoes)
+apolices_emitidas / cotacoes
 ```
-
-Onde:
-
-- Apólice emitida:
-  - `vl_premio > 0`
-  - `data_emissao IS NOT NULL`
-
-- Cotação:
-  - `COUNT(DISTINCT id_cotacao)`
 
 ---
 
-## 3. Cálculo de Integrações
+## Cálculo de Integrações
 
-### Regra
+### Definição de integração ativa
 
 Uma integração é considerada ativa quando:
 
@@ -117,9 +141,9 @@ Uma integração é considerada ativa quando:
 >= 5 cotações via API
 ```
 
-### Como é calculado
+### Regras técnicas
 
-1. Filtra apenas cotações **via API**:
+1. Considera apenas:
 
 ```
 cotacao_manual = 0
@@ -128,32 +152,23 @@ cotacao_manual = 0
 2. Agrupa por:
 
 - seguradora
-- integração
+- integracao
 
-3. Conta quantidade de linhas por integração
+3. Conta por integração
 
-4. Conta quantas integrações têm:
+4. Filtra integrações com volume >= 5
 
-```
-quantidade_linhas >= 5
-```
-
-Resultado:
+5. Conta o total final:
 
 ```
 quantidade_integracoes
 ```
 
-### Importante
-
-- Integrações são derivadas da própria coluna `integracao`
-- Não existe mais lógica separada por regra 1–7 ou Alfândega
-
 ---
 
-## 4. Regras de Score
+## Regras de Score
 
-### 4.1 Score Features (Integrações)
+### Score Features
 
 | Integrações | Score |
 |------------|------|
@@ -166,62 +181,127 @@ quantidade_integracoes
 
 ---
 
-### 4.2 Score Emissão Automática
+### Score Emissão Automática
 
 | Faixa | Score |
 |------|------|
 | < 20% | 1 |
-| 20% – 40% | 2 |
-| 40% – 60% | 3 |
-| 60% – 80% | 4 |
+| 20%–40% | 2 |
+| 40%–60% | 3 |
+| 60%–80% | 4 |
 | > 80% | 5 |
 | outros | 0 |
 
 ---
 
-### 4.3 Score Sucesso Cotação
+### Score Sucesso Cotação
 
 | Faixa | Score |
 |------|------|
 | < 30% | 1 |
-| 30% – 40% | 2 |
-| 40% – 50% | 3 |
-| 50% – 60% | 4 |
+| 30%–40% | 2 |
+| 40%–50% | 3 |
+| 50%–60% | 4 |
 | > 60% | 5 |
 | outros | 0 |
 
 ---
 
-### 4.4 Score Clientes
+### Score Clientes
 
 | Faixa | Score |
 |------|------|
 | < 10 | 1 |
-| 10 – 39 | 2 |
-| 40 – 69 | 3 |
-| 70 – 99 | 4 |
+| 10–39 | 2 |
+| 40–69 | 3 |
+| 70–99 | 4 |
 | > 100 | 5 |
 | outros | 0 |
 
 ---
 
-## 5. Score Final (ProdTech)
-
-Cálculo:
+## Score ProdTech Final
 
 ```
-(score_features + score_emissao_automatica + score_sucesso_cotacao + score_clientes) / 4
+(score_features + score_emissao + score_sucesso + score_clientes) / 4
 ```
 
-### Regras adicionais
-
-- Arredondado para 2 casas
+- Arredondado em 2 casas
 - Limitado entre 0 e 5
 
 ---
 
+## Query do Score ProdTech
+
+(versão simplificada com base única)
+
+```sql
+SELECT
+    seguradora,
+    quantidade_integracoes,
+    percentual_emissao_automatica,
+    percentual_sucesso_cotacao,
+    quantidade_clientes,
+    score_features,
+    score_emissao_automatica,
+    score_sucesso_cotacao,
+    score_clientes,
+    ROUND((score_features + score_emissao_automatica + score_sucesso_cotacao + score_clientes)/4,2) AS score_prodtech
+FROM calculo_scores
+```
+
+---
+
+## Glossário de Colunas
+
+### Principais
+
+| Coluna | Descrição |
+|--------|---------|
+| id_cotacao | Identificador da cotação |
+| id_apolice | Identificador da apólice |
+| seguradora_cotacao | Seguradora da cotação |
+| integracao | Tipo de integração |
+| cotacao_manual | 1 = manual / 0 = API |
+| fl_emissao_automatica | Flag de emissão via API |
+| vl_premio | Valor do prêmio |
+| data_emissao | Data da emissão |
+
+---
+
+## Diferenças da Versão Anterior
+
+### Removido
+
+- Pipeline de integrações separado
+- Dependência de Alfândega
+- Join entre tabelas
+- Problemas de duplicação
+
+### Novo modelo
+
+- Fonte única
+- Integrações derivadas direto da base
+- Mais performático
+- Mais simples
+
+---
+
+## Notas de Operação
+
+- Execução recomendada: diária
+- Tabela sobrescrita a cada execução
+- Qualidade da coluna `integracao` é crítica
+- `cotacao_manual` define API vs Manual
+
+---
 
 ## Conclusão
 
-O modelo atual elimina a necessidade de pipelines paralelos e centraliza toda a inteligência em uma única fonte confiável, garantindo consistência nos cálculos e maior simplicidade operacional.
+O modelo atual representa uma evolução arquitetural:
+
+✅ Redução de complexidade  
+✅ Eliminação de duplicação  
+✅ Maior confiabilidade  
+✅ Melhor performance
 
